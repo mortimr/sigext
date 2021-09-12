@@ -79,7 +79,7 @@ const main = async () => {
       .split(",")
       .filter((v) => v !== "");
     readOnlyAbi.push({
-      input: argTypes.map((v, idx) => ({
+      inputs: argTypes.map((v, idx) => ({
         internalType: v,
         name: `arg_${idx + 1}`,
         type: v,
@@ -90,7 +90,7 @@ const main = async () => {
       outputs: [],
     });
     payableOnlyAbi.push({
-      input: argTypes.map((v, idx) => ({
+      inputs: argTypes.map((v, idx) => ({
         internalType: v,
         name: `arg_${idx + 1}`,
         type: v,
@@ -101,7 +101,7 @@ const main = async () => {
       outputs: [],
     });
     nonPayableOnlyAbi.push({
-      input: argTypes.map((v, idx) => ({
+      inputs: argTypes.map((v, idx) => ({
         internalType: v,
         name: `arg_${idx + 1}`,
         type: v,
