@@ -1,6 +1,6 @@
 {
   "name": "sigext",
-  "version": "1.0.0",
+  "version": "1.0.1",
   "main": "index.js",
   "license": "MIT",
   "bin": {
@@ -8,7 +8,7 @@
   },
   "dependencies": {
     "axios": "0.21.4",
-    "cli-progress": "^3.9.0",
+    "cli-progress": "3.9.0",
     "ethers": "5.4.6",
     "evm": "0.2.0",
     "node-fetch": "3.0.0"
