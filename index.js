@@ -4,6 +4,9 @@ const ethers = require("ethers");
 const { EVM } = require("evm");
 const axios = require("axios");
 const fs = require("fs");
+const cliProgress = require('cli-progress');
+
+const bar = new cliProgress.SingleBar({}, cliProgress.Presets.shades_classic);
 
 const ADDRESS = process.argv[2];
 const JSONRPC = process.argv[3];
@@ -31,11 +34,18 @@ const provider = new ethers.providers.JsonRpcProvider(JSONRPC);
 const main = async () => {
   let code;
   try {
+    console.log("Retrieving code ...");
     code = await provider.getCode(ADDRESS);
+    console.log("Retrieved code");
   } catch (e) {
     console.error(`Unable to retrieve code.`);
     console.error(e);
     process.exit();
+  }
+
+  if (code === "0x") {
+    console.error(`Address is not smart contract`);
+    process.exit(1);
   }
 
   const evm = new EVM(code);
@@ -52,7 +62,14 @@ const main = async () => {
     (v, idx, arr) => arr.indexOf(v) === idx
   );
   const methods = [];
+  const noMatch = [];
+  let idx = 0;
+  console.log()
+  console.log(`Searching for matches`);
+  bar.start(potentialMethodSignatures.length, 0);
   for (const potentialMethodSignature of potentialMethodSignatures) {
+    bar.update(idx + 1);
+    ++idx;
     const res = await axios.get(
       `https://www.4byte.directory/api/v1/signatures/?hex_signature=${potentialMethodSignature}`
     );
@@ -63,11 +80,28 @@ const main = async () => {
           method: resu.text_signature,
         });
       }
+    } else {
+      noMatch.push(potentialMethodSignature);
     }
     await new Promise((ok) => setTimeout(ok, 200));
   }
-  for (const method of methods) {
-    console.log(`[${method.signature}] => ${method.method}`);
+  bar.stop();
+  console.log();
+  if (methods.length) {
+    console.log(`Signatures with possible identifications`);
+    for (const method of methods) {
+      console.log(`[${method.signature}] => ${method.method}`);
+    }
+  } else {
+    console.error(`No methods identified`);
+    process.exit(1);
+  }
+  console.log();
+  if (noMatch.length) {
+    console.log(`Signatures without identification`);
+    for (const method of noMatch) {
+      console.log(`[${method}]`);
+    }
   }
   const readOnlyAbi = [];
   const payableOnlyAbi = [];
@@ -112,7 +146,15 @@ const main = async () => {
       outputs: [],
     });
   }
-  fs.writeFileSync(`${NAME}.abi.json`, JSON.stringify(readOnlyAbi.concat(payableOnlyAbi).concat(nonPayableOnlyAbi), null, 4));
+  fs.writeFileSync(
+    `${NAME}.abi.json`,
+    JSON.stringify(
+      readOnlyAbi.concat(payableOnlyAbi).concat(nonPayableOnlyAbi),
+      null,
+      4
+    )
+  );
+  console.log();
   console.log(`Written abi to ${NAME}.abi.json`);
 };
 
