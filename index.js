@@ -5,6 +5,7 @@ const { EVM } = require("evm");
 const axios = require("axios");
 const fs = require("fs");
 const cliProgress = require('cli-progress');
+const manifest = require('./package.json');
 
 const bar = new cliProgress.SingleBar({}, cliProgress.Presets.shades_classic);
 
@@ -30,6 +31,8 @@ if (!NAME) {
 }
 
 const provider = new ethers.providers.JsonRpcProvider(JSONRPC);
+
+console.log(`sigext v${manifest.version}`);
 
 const main = async () => {
   let code;
@@ -158,4 +161,8 @@ const main = async () => {
   console.log(`Written abi to ${NAME}.abi.json`);
 };
 
-main();
+main()
+.catch((e) => {
+  console.error(e);
+  bar.stop();
+})
